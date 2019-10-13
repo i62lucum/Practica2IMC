@@ -22,6 +22,8 @@ using namespace util;
 // ------------------------------
 // CONSTRUCTOR: Dar valor por defecto a todos los parámetros (dEta, dMu, dValidacion y dDecremento)
 PerceptronMulticapa::PerceptronMulticapa(){
+	this->bOnline=true;
+	this->nNumPatronesTrain=0;
 	this->nNumCapas=0;
 	this->pCapas=NULL;
 	this->dEta=0.0;
@@ -41,6 +43,7 @@ int PerceptronMulticapa::inicializar(int nl, int npl[], int tipo[]) {
 	//Bucle que reserva las neuronas de cada capa
 	for(int h=0;h<nl;h++){
 		this->pCapas[h].nNumNeuronas=npl[h];
+		this->pCapas[h].nNumNeuronas=tipo[h];
 		this->pCapas[h].pNeuronas=new Neurona[npl[h]];
 		//Bucle que reserva los arrays de pesos de cada neurona.
 		for(int j=0; j<npl[h];j++){
@@ -160,8 +163,15 @@ void PerceptronMulticapa::propagarEntradas() {
 					acum+=this->pCapas[h].pNeuronas[j].w[i]*this->pCapas[h-1].pNeuronas[i].x;
 				}
 			}
-			//Al sumatorio se le aplica la sigmoide
-			this->pCapas[h].pNeuronas[j].x=1/(1+exp(-acum));
+			//Se aplica sigmoide
+			if(this->pCapas[h].tipo==0){
+				this->pCapas[h].pNeuronas[j].x=1/(1+exp(-acum));
+			}
+			//Se aplica softmax.
+			else{
+
+			}
+
 		}
 	}
 }
@@ -335,23 +345,57 @@ void PerceptronMulticapa::simularRed(double* entrada, double* objetivo, int func
 // ------------------------------
 // Leer una matriz de datos a partir de un nombre de fichero y devolverla
 Datos* PerceptronMulticapa::leerDatos(const char *archivo) {
-	Datos * pDatos = new Datos;
+	Datos *matriz=new Datos;
+	ifstream file(archivo);
 
-	return pDatos;
+	file>>matriz->nNumEntradas;
+	file>>matriz->nNumSalidas;
+	file>>matriz->nNumPatrones;
+	matriz->entradas=new double*[matriz->nNumPatrones];
+	matriz->salidas=new double*[matriz->nNumPatrones];
+	for(int i=0;i<matriz->nNumPatrones;i++){
+		matriz->entradas[i]=new double[matriz->nNumEntradas];
+		matriz->salidas[i]=new double[matriz->nNumSalidas];
+	}
+
+	for(int i=0;i<matriz->nNumPatrones;i++){
+		for(int j=0;j<matriz->nNumEntradas;j++){
+			file>>matriz->entradas[i][j];
+		}
+		for(int j=0;j<matriz->nNumSalidas;j++){
+			file>>matriz->salidas[i][j];
+		}
+	}
+	file.close();
+	return matriz;
 }
 
 
 // ------------------------------
 // Entrenar la red para un determinado fichero de datos (pasar una vez por todos los patrones)
 void PerceptronMulticapa::entrenar(Datos* pDatosTrain, int funcionError) {
-
+	int i;
+	for(i=0; i<pDatosTrain->nNumPatrones; i++){
+		simularRed(pDatosTrain->entradas[i], pDatosTrain->salidas[i],funcionError);
+	}
 }
 
 // ------------------------------
 // Probar la red con un conjunto de datos y devolver el error cometido
 // funcionError=1 => EntropiaCruzada // funcionError=0 => MSE
 double PerceptronMulticapa::test(Datos* pDatosTest, int funcionError) {
+	//TODO
+	double MSE=0.0;
+	int i;
 
+	for(i=0; i<pDatosTest->nNumPatrones; i++){
+		this->alimentarEntradas(pDatosTest->entradas[i]);
+		this->propagarEntradas();
+		MSE+=this->calcularErrorSalida(pDatosTest->salidas[i],funcionError);
+
+	}
+	MSE/=pDatosTest->nNumPatrones;
+	return MSE;
 	return 0.0;
 }
 
