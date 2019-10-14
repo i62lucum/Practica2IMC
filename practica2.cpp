@@ -235,6 +235,7 @@ int main(int argc, char **argv) {
         int semillas[] = {1,2,3,4,5};
         double *errores = new double[5];
         double *erroresTrain = new double[5];
+        double *erroresValidacion = new double[5];
         double *ccrs = new double[5];
         double *ccrsTrain = new double[5];
         double mejorErrorTest = 1.0;
@@ -243,7 +244,8 @@ int main(int argc, char **argv) {
         	cout << "SEMILLA " << semillas[i] << endl;
         	cout << "**********" << endl;
     		srand(semillas[i]);
-    		mlp.ejecutarAlgoritmo(pDatosTrain,pDatosTest,iteraciones,&(erroresTrain[i]),&(errores[i]),&(ccrsTrain[i]),&(ccrs[i]),f);
+
+    		mlp.ejecutarAlgoritmo(pDatosTrain,pDatosTest,pDatosValidacion,iteraciones,&(erroresTrain[i]),&(errores[i]),&(erroresValidacion[i]),&(ccrsTrain[i]),&(ccrs[i]),f);
     		cout << "Finalizamos => CCR de test final: " << ccrs[i] << endl;
 
             // (Opcional - Kaggle) Guardamos los pesos cada vez que encontremos un modelo mejor.
@@ -253,15 +255,54 @@ int main(int argc, char **argv) {
                 mejorErrorTest = errores[i];
             }
 
+
         }
 
 
         double mediaError = 0, desviacionTipicaError = 0;
         double mediaErrorTrain = 0, desviacionTipicaErrorTrain = 0;
+        double mediaErrorValidacion = 0, desviacionTipicaErrorValidacion = 0;
         double mediaCCR = 0, desviacionTipicaCCR = 0;
         double mediaCCRTrain = 0, desviacionTipicaCCRTrain = 0;
 
         // Calcular medias y desviaciones típicas de entrenamiento y test
+
+        for(int i =0; i<5;i++){
+        	mediaErrorTrain+=erroresTrain[i];
+        	mediaError+=errores[i];
+        	mediaCCR+=ccrs[i];
+        	mediaCCRTrain+=ccrsTrain[i];
+        	if(val>0.0 && val<1.0)
+        		mediaErrorValidacion+=erroresValidacion[i];
+        }
+        mediaErrorTrain/=5;
+        mediaError/=5;
+        mediaCCR/=5;
+        mediaCCRTrain/=5;
+        if(val>0.0 && val<1.0)
+        	mediaErrorValidacion/=5;
+
+        for(int i=0; i<5;i++){
+        	desviacionTipicaErrorTrain+= pow(erroresTrain[i]-mediaErrorTrain,2);
+			desviacionTipicaError+= pow(errores[i]-mediaError,2);
+			desviacionTipicaCCR+= pow(ccrs[i]-mediaCCR,2);
+			desviacionTipicaCCRTrain+= pow(ccrsTrain[i]-mediaCCR,2);
+			if(val>0.0 && val<1.0)
+				desviacionTipicaErrorValidacion+= pow(erroresValidacion[i]-mediaErrorValidacion,2);
+        }
+        desviacionTipicaErrorTrain/=5;
+        desviacionTipicaError/=5;
+        desviacionTipicaCCR/=5;
+        desviacionTipicaCCRTrain/=5;
+        if(val>0.0 && val<1.0)
+        	desviacionTipicaErrorValidacion/=5;
+
+        desviacionTipicaErrorTrain=sqrt(desviacionTipicaErrorTrain);
+        desviacionTipicaError=sqrt(desviacionTipicaError);
+        desviacionTipicaCCR=sqrt(desviacionTipicaCCR);
+        desviacionTipicaCCRTrain=sqrt(desviacionTipicaCCRTrain);
+        if(val>0.0 && val<1.0)
+        	desviacionTipicaErrorValidacion=sqrt(desviacionTipicaErrorValidacion);
 
 
         cout << "HEMOS TERMINADO TODAS LAS SEMILLAS" << endl;
@@ -270,6 +311,8 @@ int main(int argc, char **argv) {
     	cout << "*************" << endl;
         cout << "Error de entrenamiento (Media +- DT): " << mediaErrorTrain << " +- " << desviacionTipicaErrorTrain << endl;
         cout << "Error de test (Media +- DT): " << mediaError << " +- " << desviacionTipicaError << endl;
+        if(val>0.0 && val<1.0)
+               	cout << "Error de validacion (Media +- DT): " << mediaErrorValidacion << " +- " << desviacionTipicaErrorValidacion<<endl;
         cout << "CCR de entrenamiento (Media +- DT): " << mediaCCRTrain << " +- " << desviacionTipicaCCRTrain << endl;
         cout << "CCR de test (Media +- DT): " << mediaCCR << " +- " << desviacionTipicaCCR << endl;
     	return EXIT_SUCCESS;
