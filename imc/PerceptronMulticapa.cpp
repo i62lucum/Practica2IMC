@@ -148,8 +148,8 @@ void PerceptronMulticapa::restaurarPesos() {
 // ------------------------------
 // Calcular y propagar las salidas de las neuronas, desde la primera capa hasta la última
 void PerceptronMulticapa::propagarEntradas() {
-	//TODO Establecer la ultima capa como softmax
-	double acum;
+
+	double acum,acumSoft=0.0;
 	for(int h=1; h<this->nNumCapas;h++){
 		for(int j=0; j<this->pCapas[h].nNumNeuronas; j++){
 			acum=0.0;
@@ -167,12 +167,22 @@ void PerceptronMulticapa::propagarEntradas() {
 			if(this->pCapas[h].tipo==0){
 				this->pCapas[h].pNeuronas[j].x=1/(1+exp(-acum));
 			}
-			//Se aplica softmax.
+			//SOFTMAX
 			else{
-
+				this->pCapas[h].pNeuronas[j].x=exp(acum);
+				acumSoft+=this->pCapas[h].pNeuronas[j].x;
 			}
-
 		}
+		//Se aplica la Softmax
+		if(this->pCapas[h].tipo==1){
+			//Se calcula el denominador de la softmax
+			double denom=exp(acumSoft);
+			//Se recorre la capa de nuevo para aplicar la softmax
+			for(int j=0; j<this->pCapas[h].nNumNeuronas; j++){
+				this->pCapas[h].pNeuronas[j].x/=denom;
+			}
+		}
+
 	}
 }
 
@@ -187,10 +197,13 @@ double PerceptronMulticapa::calcularErrorSalida(double* target, int funcionError
 	double *salida=new double[nCapaSalida];
 	this->recogerSalidas(salida);
 
-	double error=0,aux;
+	double error=0.0,aux;
 
-	//TODO Entropía cruzada
 	if(funcionError==1){
+		for(int j=0;j<nCapaSalida;j++){
+			error+=target[j]*log(salida[j]);
+		}
+		error/=nCapaSalida;
 
 	}
 	//MSE
@@ -215,18 +228,48 @@ void PerceptronMulticapa::retropropagarError(double* objetivo, int funcionError)
 	//Se obtiene el número de neuronas de la capa de salida.
 	int nCapaSalida=this->pCapas[this->nNumCapas-1].nNumNeuronas;
 	double error,salida,aux;
-	//TODO Entropía cruzada
-	if(funcionError==1){
-
-	}
-	//MSE
-	else{
-		//Se obtienen las derivadas a de la capa de salida.
+	error=this->calcularErrorSalida(objetivo,funcionError);
+	//TODO SoftMax
+	//SOFTMAX
+	if(this->pCapas[this->nNumCapas-1].tipo==1){
 		for(int j=0; j<nCapaSalida;j++){
+			for(int i=0; j<nCapaSalida;i++){
+				//MSE
+				if(funcionError==0){
+
+				}
+				//Entropía cruzada
+				else{
+
+				}
+			}
 			salida=this->pCapas[this->nNumCapas-1].pNeuronas[j].x;
 			error=objetivo[j]-salida;
 			//Derivada de la salida con respecto al error.
 			aux=-error*salida*(1-salida);
+			this->pCapas[this->nNumCapas-1].pNeuronas[j].dX=aux;
+		}
+	}
+
+	//SIGMOIDE
+	else{
+		//Se obtienen las derivadas a de la capa de salida.
+		for(int j=0; j<nCapaSalida;j++){
+			salida=this->pCapas[this->nNumCapas-1].pNeuronas[j].x;
+
+			//MSE
+			if(funcionError==0){
+				error=objetivo[j]-salida;
+				//Derivada de la salida con respecto al error.
+				aux=-error*salida*(1-salida);
+
+			}
+			//Entropía cruzada
+			else{
+				error=objetivo[j]/salida;
+				//Derivada de la salida con respecto al error.
+				aux=-error*salida*(1-salida);
+			}
 			this->pCapas[this->nNumCapas-1].pNeuronas[j].dX=aux;
 		}
 	}
@@ -396,7 +439,6 @@ double PerceptronMulticapa::test(Datos* pDatosTest, int funcionError) {
 	}
 	MSE/=pDatosTest->nNumPatrones;
 	return MSE;
-	return 0.0;
 }
 
 // OPCIONAL - KAGGLE
