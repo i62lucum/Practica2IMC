@@ -96,9 +96,11 @@ void PerceptronMulticapa::liberarMemoria() {
 void PerceptronMulticapa::pesosAleatorios() {
 	for(int h=1; h<this->nNumCapas;h++){
 		for(int j=0; j<this->pCapas[h].nNumNeuronas; j++){
+
 			for(int i=0; i<=this->pCapas[h-1].nNumNeuronas;i++){
 				double nRand=((double)rand()/RAND_MAX)*2-1;
 				this->pCapas[h].pNeuronas[j].w[i]=nRand;
+
 			}
 		}
 	}
@@ -151,8 +153,10 @@ void PerceptronMulticapa::propagarEntradas() {
 
 	double acum,acumSoft=0.0;
 	for(int h=1; h<this->nNumCapas;h++){
+		acumSoft=0.0;
 		for(int j=0; j<this->pCapas[h].nNumNeuronas; j++){
 			acum=0.0;
+
 			for(int i=0; i<=this->pCapas[h-1].nNumNeuronas;i++){
 				//Si z es el ultimo elemento, es el sesgo.
 				if(i==this->pCapas[h-1].nNumNeuronas){
@@ -176,7 +180,7 @@ void PerceptronMulticapa::propagarEntradas() {
 		//Se aplica la Softmax
 		if(this->pCapas[h].tipo==1){
 			//Se calcula el denominador de la softmax
-			double denom=exp(acumSoft);
+			double denom=acumSoft;
 			//Se recorre la capa de nuevo para aplicar la softmax
 			for(int j=0; j<this->pCapas[h].nNumNeuronas; j++){
 				this->pCapas[h].pNeuronas[j].x/=denom;
@@ -231,19 +235,20 @@ void PerceptronMulticapa::retropropagarError(double* objetivo, int funcionError)
 	double dError,salidaJ,aux,salidaI;
 	dError=this->calcularErrorSalida(objetivo,funcionError);
 	//SOFTMAX
+
 	if(this->pCapas[this->nNumCapas-1].tipo==1){
 		for(int j=0; j<nCapaSalida;j++){
 			salidaJ=this->pCapas[this->nNumCapas-1].pNeuronas[j].x;
 			aux=0.0;
-			for(int i=0; j<nCapaSalida;i++){
+			for(int i=0; i<nCapaSalida;i++){
 				salidaI=this->pCapas[this->nNumCapas-1].pNeuronas[i].x;
 				//MSE
 				if(funcionError==0){
-					dError=objetivo[j]-salidaI;
+					dError=objetivo[i]-salidaI;
 				}
 				//Entropía cruzada
 				else{
-					dError=objetivo[j]/salidaI;
+					dError=objetivo[i]/salidaI;
 				}
 				//Se acumula el sumatorio de la derivada de cada neurona con respecto al resto.
 				aux+=dError*salidaJ*((i==j)-salidaI);
@@ -275,8 +280,6 @@ void PerceptronMulticapa::retropropagarError(double* objetivo, int funcionError)
 			this->pCapas[this->nNumCapas-1].pNeuronas[j].dX=aux;
 		}
 	}
-
-
 	//Se recorren las capas de la salida a la entrada, empezando por la anteior a la salida.
 	for(int h=this->nNumCapas-2;h>=1;h--){
 		//Se recorren las neuronas de la capa i.
@@ -394,6 +397,7 @@ void PerceptronMulticapa::simularRed(double* entrada, double* objetivo, int func
 	this->propagarEntradas();
 
 	this->retropropagarError(objetivo,funcionError);
+
 	this->acumularCambio();
 	if(this->bOnline)
 		this->ajustarPesos();
@@ -404,7 +408,10 @@ void PerceptronMulticapa::simularRed(double* entrada, double* objetivo, int func
 Datos* PerceptronMulticapa::leerDatos(const char *archivo) {
 	Datos *matriz=new Datos;
 	ifstream file(archivo);
-
+	if(!file.is_open()){
+		std::cerr<<"No se pudo abrir el fichero "<<archivo<<endl;
+		exit(-1);
+	}
 	file>>matriz->nNumEntradas;
 	file>>matriz->nNumSalidas;
 	file>>matriz->nNumPatrones;
@@ -433,6 +440,7 @@ Datos* PerceptronMulticapa::leerDatos(const char *archivo) {
 void PerceptronMulticapa::entrenar(Datos* pDatosTrain, int funcionError) {
 	int i;
 	for(i=0; i<pDatosTrain->nNumPatrones; i++){
+
 		simularRed(pDatosTrain->entradas[i], pDatosTrain->salidas[i],funcionError);
 	}
 	if(!this->bOnline){

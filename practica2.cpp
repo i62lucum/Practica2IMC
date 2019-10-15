@@ -24,7 +24,7 @@ using namespace std;
 int main(int argc, char **argv) {
     // Procesar los argumentos de la línea de comandos
     bool Tflag = 0, wflag = 0, pflag = 0,tflag=0, oflag=0,sflag=0;
-    char *Tvalue = NULL, *wvalue = NULL,*tvalue;
+    char *Tvalue = NULL, *wvalue = NULL,*tvalue=NULL;
     int c,iter=1000,nOcultas=1,nNeuronas=5,decr=1,f=0;
     double eta=0.7,mu=1,val=0.0;
     opterr = 0;
@@ -170,7 +170,6 @@ int main(int argc, char **argv) {
         for(int i=1; i<(capas+2-1); i++)
         	topologia[i] = nNeuronas;
         topologia[capas+2-1] = pDatosTrain->nNumSalidas;
-
         //Inicializar vector de tipo de función
         int *tipo = new int[capas+2];
         for(int i=0; i<(capas+2-1); i++)
@@ -181,7 +180,7 @@ int main(int argc, char **argv) {
 
     	//Estructuras para realizar validación.
 		int *aleatorios;
-		Datos * pDatosValidacion;
+		Datos * pDatosValidacion=NULL;
 		Datos * pDatosTrainAux;
 		if(val>0.0 && val<1.0){
 			pDatosValidacion=new Datos;
@@ -244,6 +243,7 @@ int main(int argc, char **argv) {
         	cout << "SEMILLA " << semillas[i] << endl;
         	cout << "**********" << endl;
     		srand(semillas[i]);
+
 
     		mlp.ejecutarAlgoritmo(pDatosTrain,pDatosTest,pDatosValidacion,iteraciones,&(erroresTrain[i]),&(errores[i]),&(erroresValidacion[i]),&(ccrsTrain[i]),&(ccrs[i]),f);
     		cout << "Finalizamos => CCR de test final: " << ccrs[i] << endl;
