@@ -6,6 +6,7 @@
 
 #ifndef _PERCEPTRONMULTICAPA_H_
 #define _PERCEPTRONMULTICAPA_H_
+#include <fstream>
 
 namespace imc{
 
@@ -128,7 +129,8 @@ public:
     // Una vez terminado, probar como funciona la red en pDatosTest
     // Tanto el error MSE de entrenamiento como el error MSE de test debe calcularse y almacenarse en errorTrain y errorTest
 	// funcionError=1 => EntropiaCruzada // funcionError=0 => MSE
-	void ejecutarAlgoritmo(Datos * pDatosTrain, Datos * pDatosTest,Datos * pDatosValidacion, int maxiter, double *errorTrain, double *errorTest,double *errorValidacion, double *ccrTrain, double *ccrTest, int funcionError);
+	void ejecutarAlgoritmo(Datos * pDatosTrain, Datos * pDatosTest,Datos * pDatosValidacion, int maxiter, double *errorTrain,
+			double *errorTest,double *errorValidacion, double *ccrTrain, double *ccrTest, int funcionError,std::ofstream &file);
 
 	//Guardar los pesos del modelo en un fichero de texto.
 	bool guardarPesos(const char * archivo);

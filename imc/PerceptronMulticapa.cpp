@@ -503,6 +503,12 @@ double PerceptronMulticapa::testClassification(Datos* pDatosTest) {
 
 	double *salidas=new double[pDatosTest->nNumSalidas];
 
+	//Se reserva memoria para la matriz y se inicializa a 0.
+	int **matrizConf=new int*[pDatosTest->nNumSalidas];
+	for(int i =0; i<pDatosTest->nNumSalidas;i++){
+		matrizConf[i]=new int[pDatosTest->nNumSalidas]{};
+	}
+	std::cout<<"MATRIZ DE CONFUSION"<<std::endl<<"======================"<<std::endl;
 	//Se prueban todos los patrones
 	for(int i=0;i<pDatosTest->nNumPatrones;i++){
 		//Se propaga el patron por la red
@@ -523,7 +529,9 @@ double PerceptronMulticapa::testClassification(Datos* pDatosTest) {
 				indexPredicted=j;
 				mayorPredicted=salidas[j];
 			}
+
 		}
+		matrizConf[indexClass][indexPredicted]++;
 		//Se comprueba si coinciden los indices de la clase esperada con la predicha.
 		//Si es asi, se aumenta el CCR porque hay un patron bien clasificado.
 		if(indexClass==indexPredicted){
@@ -532,6 +540,19 @@ double PerceptronMulticapa::testClassification(Datos* pDatosTest) {
 	}
 	CCR*=100;
 	CCR/=pDatosTest->nNumPatrones;
+	std::cout<<"\t";
+	for(int i=0; i<pDatosTest->nNumSalidas;i++){
+		std::cout<<"["<<i<<"]\t";
+	}
+	std::cout<<std::endl;
+	for(int i=0; i<pDatosTest->nNumSalidas;i++){
+		std::cout<<"["<<i<<"]\t";
+		for(int j=0; j<pDatosTest->nNumSalidas;j++){
+			std::cout<<matrizConf[i][j]<<"\t";
+		}
+		std::cout<<std::endl;
+	}
+
 
 	return CCR;
 }
@@ -541,7 +562,8 @@ double PerceptronMulticapa::testClassification(Datos* pDatosTest) {
 // Una vez terminado, probar como funciona la red en pDatosTest
 // Tanto el error MSE de entrenamiento como el error MSE de test debe calcularse y almacenarse en errorTrain y errorTest
 // funcionError=1 => EntropiaCruzada // funcionError=0 => MSE
-void PerceptronMulticapa::ejecutarAlgoritmo(Datos * pDatosTrain, Datos * pDatosTest,Datos * pDatosValidacion, int maxiter, double *errorTrain, double *errorTest,double *errorValidacion, double *ccrTrain, double *ccrTest, int funcionError)
+void PerceptronMulticapa::ejecutarAlgoritmo(Datos * pDatosTrain, Datos * pDatosTest,Datos * pDatosValidacion, int maxiter,
+		double *errorTrain, double *errorTest,double *errorValidacion, double *ccrTrain, double *ccrTest, int funcionError,ofstream &file)
 {
 	int countTrain = 0;
 
@@ -613,7 +635,7 @@ void PerceptronMulticapa::ejecutarAlgoritmo(Datos * pDatosTrain, Datos * pDatosT
 
 		testError = test(pDatosTest,funcionError);
 
-		//file <<countTrain<<" "<<trainError<<" "<<validationError<<" "<<testError<<endl;
+		file <<countTrain<<" "<<trainError<<" "<<validationError<<" "<<testError<<endl;
 		//cout << "Iteración " << countTrain << "\t Error de entrenamiento: " << trainError << "\t Error de validación: " << validationError << endl;
 
 	} while ( countTrain<maxiter );

@@ -19,7 +19,11 @@
 #include "imc/util.h"
 
 using namespace imc;
-using namespace std;
+
+using std::cout;
+using std::endl;
+using std::ofstream;
+using std::cerr;
 
 int main(int argc, char **argv) {
     // Procesar los argumentos de la línea de comandos
@@ -230,6 +234,10 @@ int main(int argc, char **argv) {
 			pDatosTrain=pDatosTrainAux;
 		}
 
+
+		ofstream file("salida.txt");
+		file <<"iter"<<" "<<"trainError"<<" "<<"validationError"<<" "<<"testError"<<endl;
+
         // Semilla de los números aleatorios
         int semillas[] = {1,2,3,4,5};
         double *errores = new double[5];
@@ -238,6 +246,7 @@ int main(int argc, char **argv) {
         double *ccrs = new double[5];
         double *ccrsTrain = new double[5];
         double mejorErrorTest = 1.0;
+
         for(int i=0; i<5; i++){
         	cout << "**********" << endl;
         	cout << "SEMILLA " << semillas[i] << endl;
@@ -245,7 +254,7 @@ int main(int argc, char **argv) {
     		srand(semillas[i]);
 
 
-    		mlp.ejecutarAlgoritmo(pDatosTrain,pDatosTest,pDatosValidacion,iteraciones,&(erroresTrain[i]),&(errores[i]),&(erroresValidacion[i]),&(ccrsTrain[i]),&(ccrs[i]),f);
+    		mlp.ejecutarAlgoritmo(pDatosTrain,pDatosTest,pDatosValidacion,iteraciones,&(erroresTrain[i]),&(errores[i]),&(erroresValidacion[i]),&(ccrsTrain[i]),&(ccrs[i]),f,file);
     		cout << "Finalizamos => CCR de test final: " << ccrs[i] << endl;
 
             // (Opcional - Kaggle) Guardamos los pesos cada vez que encontremos un modelo mejor.
@@ -286,7 +295,7 @@ int main(int argc, char **argv) {
         	desviacionTipicaErrorTrain+= pow(erroresTrain[i]-mediaErrorTrain,2);
 			desviacionTipicaError+= pow(errores[i]-mediaError,2);
 			desviacionTipicaCCR+= pow(ccrs[i]-mediaCCR,2);
-			desviacionTipicaCCRTrain+= pow(ccrsTrain[i]-mediaCCR,2);
+			desviacionTipicaCCRTrain+= pow(ccrsTrain[i]-mediaCCRTrain,2);
 			if(val>0.0 && val<1.0)
 				desviacionTipicaErrorValidacion+= pow(erroresValidacion[i]-mediaErrorValidacion,2);
         }
